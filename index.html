@@ -1,3 +1,5 @@
+--- START OF FILE Paste April 10, 2026 - 9:25PM ---
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -461,8 +463,8 @@
                                placeholder="Saisir ID de synchro"
                                class="w-full bg-transparent border-b border-white/20 text-white font-mono text-xs py-1 focus:outline-none focus:border-indigo-400">
                     </div>
-                    <button onclick="checkCloudUpdate(true)" class="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition">Forcer récupération Cloud</button>
-                    <button onclick="syncToCloud()" class="w-full mt-2 bg-white/10 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest">Forcer envoi Local</button>
+                    <button onclick="checkCloudUpdate(true)" class="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition">Récupérer données Cloud</button>
+                    <button onclick="confirmResetCloud()" class="w-full mt-4 bg-red-500/20 text-red-400 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest border border-red-500/30">Réinitialiser le Cloud</button>
                 </div>
                 <button onclick="resetApp()" class="w-full text-red-400 font-bold text-[10px] uppercase tracking-widest py-4">Réinitialiser les données locales</button>
             </div>`;
@@ -473,7 +475,8 @@
 
         function updateSyncKey(val) {
             state.syncKey = val.trim();
-            save(); // Sauvegarde locale immédiate
+            localStorage.setItem('sb_v5_state', JSON.stringify(state)); 
+            if (state.syncKey) checkCloudUpdate(true);
         }
 
         function save() { 
@@ -548,7 +551,6 @@
                     }
 
                     if (cloudState.lastUpdated > state.lastUpdated || force) {
-                        // On garde la syncKey actuelle pour éviter l'écrasement par une clé vide du cloud si non synchro
                         const currentKey = state.syncKey;
                         state = Object.assign(state, cloudState);
                         state.syncKey = currentKey;
@@ -570,6 +572,17 @@
             } catch(e) {
                 updateSyncUI('error');
             }
+        }
+
+        function confirmResetCloud() {
+            if (!state.syncKey) { alert("Aucun ID Cloud configuré."); return; }
+            showGenericModal(
+                "Reset Cloud ?", 
+                "Attention, cela va écraser les données distantes par votre état local actuel.", 
+                "alert-triangle", 
+                () => { syncToCloud(); }, 
+                () => {}
+            );
         }
 
         function resetApp() { 
