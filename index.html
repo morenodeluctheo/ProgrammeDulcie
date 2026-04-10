@@ -104,7 +104,6 @@
             chest_press: { name: 'Chest press', sets: 2, range: [8, 12], inc: 4, rest: 90, tips: ['Omoplates fixées', 'Coudes sous les épaules'], guide: 'Expirez lors de la poussée.' }
         };
 
-        const MY_SYNC_ID = "5660dd651f380dc50cc0";
         const API_BASE = "https://api.npoint.io/";
 
         let state = {
@@ -114,7 +113,7 @@
             history: [],
             sessionInProgress: {},
             pendingChanges: {},
-            syncKey: MY_SYNC_ID,
+            syncKey: "5660dd651f380dc50cc0", // Valeur par défaut
             lastUpdated: 0,
             isDirty: false
         };
@@ -456,8 +455,8 @@
                 <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl">
                     <h3 class="font-black uppercase text-[10px] tracking-widest text-indigo-400 mb-4">Synchro Cloud Active</h3>
                     <div class="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10">
-                        <div class="text-[9px] font-bold text-slate-400 uppercase mb-1">ID npoint.io</div>
-                        <div class="text-xs font-black text-white font-mono break-all">${state.syncKey}</div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">ID npoint.io</label>
+                        <input type="text" onchange="state.syncKey=this.value;save();" value="${state.syncKey}" class="w-full bg-transparent border-none p-0 font-black text-white font-mono text-xs focus:ring-0" placeholder="Entrez votre ID">
                     </div>
                     <button onclick="checkCloudUpdate(true)" class="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition">Forcer récupération Cloud</button>
                     <button onclick="syncToCloud()" class="w-full mt-2 bg-white/10 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest">Forcer envoi Local</button>
@@ -569,7 +568,6 @@
             if (saved) {
                 const parsed = JSON.parse(saved);
                 state = Object.assign(state, parsed);
-                state.syncKey = MY_SYNC_ID;
             }
             
             router('workout');
