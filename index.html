@@ -11,7 +11,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        /* Ajustement du padding bas pour coller à la nav bar */
         .content-padding { padding-bottom: 120px !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .modal-up { animation: slideUp 0.3s ease-out; }
@@ -113,7 +112,7 @@
             history: [],
             sessionInProgress: {},
             pendingChanges: {},
-            syncKey: "", // Valeur par défaut
+            syncKey: "",
             lastUpdated: 0,
             isDirty: false
         };
@@ -453,10 +452,14 @@
             });
             html += `</div></div>
                 <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl">
-                    <h3 class="font-black uppercase text-[10px] tracking-widest text-indigo-400 mb-4">Synchro Cloud Active</h3>
+                    <h3 class="font-black uppercase text-[10px] tracking-widest text-indigo-400 mb-4">Configuration Cloud</h3>
                     <div class="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10">
                         <label class="text-[9px] font-bold text-slate-400 uppercase mb-1 block">ID npoint.io</label>
-                        <input type="text" onchange="state.syncKey=this.value;save();" value="${state.syncKey}" class="w-full bg-transparent border-none p-0 font-black text-white font-mono text-xs focus:ring-0" placeholder="Entrez votre ID">
+                        <input type="text" 
+                               value="${state.syncKey}" 
+                               onchange="updateSyncKey(this.value)" 
+                               placeholder="Saisir ID de synchro"
+                               class="w-full bg-transparent border-b border-white/20 text-white font-mono text-xs py-1 focus:outline-none focus:border-indigo-400">
                     </div>
                     <button onclick="checkCloudUpdate(true)" class="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition">Forcer récupération Cloud</button>
                     <button onclick="syncToCloud()" class="w-full mt-2 bg-white/10 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest">Forcer envoi Local</button>
@@ -467,6 +470,11 @@
         }
 
         // --- LOGIQUE SYNCHRO ---
+
+        function updateSyncKey(val) {
+            state.syncKey = val.trim();
+            save(); // Sauvegarde locale immédiate
+        }
 
         function save() { 
             state.lastUpdated = Date.now();
@@ -486,6 +494,9 @@
             } else if (status === 'error') {
                 dot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
                 text.innerText = "Erreur Cloud";
+            } else if (!state.syncKey) {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-300";
+                text.innerText = "Non configuré";
             } else if (state.isDirty) {
                 dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
                 text.innerText = "Modif. locales en attente";
@@ -496,7 +507,10 @@
         }
 
         async function syncToCloud() {
-            if (!navigator.onLine || !state.syncKey) return;
+            if (!navigator.onLine || !state.syncKey) {
+                updateSyncUI();
+                return;
+            }
             updateSyncUI('loading');
             try {
                 const res = await fetch(API_BASE + state.syncKey, {
@@ -517,7 +531,10 @@
         }
 
         async function checkCloudUpdate(force = false) {
-            if (!navigator.onLine || !state.syncKey) return;
+            if (!navigator.onLine || !state.syncKey) {
+                updateSyncUI();
+                return;
+            }
             if (force) updateSyncUI('loading');
 
             try {
@@ -531,7 +548,11 @@
                     }
 
                     if (cloudState.lastUpdated > state.lastUpdated || force) {
+                        // On garde la syncKey actuelle pour éviter l'écrasement par une clé vide du cloud si non synchro
+                        const currentKey = state.syncKey;
                         state = Object.assign(state, cloudState);
+                        state.syncKey = currentKey;
+                        
                         state.isDirty = false;
                         localStorage.setItem('sb_v5_state', JSON.stringify(state));
                         
@@ -572,8 +593,10 @@
             
             router('workout');
 
-            if (navigator.onLine) {
+            if (navigator.onLine && state.syncKey) {
                 setTimeout(() => checkCloudUpdate(true), 500);
+            } else {
+                updateSyncUI();
             }
         })();
     </script>
