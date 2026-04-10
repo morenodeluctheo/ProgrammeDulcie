@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -577,9 +576,25 @@
             if (!state.syncKey) { alert("Aucun ID Cloud configuré."); return; }
             showGenericModal(
                 "Reset Cloud ?", 
-                "Attention, cela va écraser les données distantes par votre état local actuel.", 
+                "Attention, cela va effacer TOUT l'historique distant et remettre les poids à zéro.", 
                 "alert-triangle", 
-                () => { syncToCloud(); }, 
+                () => {
+                    const currentKey = state.syncKey;
+                    // Reset vers l'état initial
+                    state = {
+                        currentWeights: { hack_squat: 10, pulldown: 15, bulgarian: 4, rowing: 15, extension: 0, chest_press: 10 },
+                        targetReps: { hack_squat: 8, pulldown: 8, bulgarian: 8, rowing: 8, extension: 12, chest_press: 8 },
+                        increments: { hack_squat: 5, pulldown: 2.3, bulgarian: 4, rowing: 2.3, extension: 2, chest_press: 4 },
+                        history: [],
+                        sessionInProgress: {},
+                        pendingChanges: {},
+                        syncKey: currentKey,
+                        lastUpdated: Date.now(),
+                        isDirty: true
+                    };
+                    save(); // Met à jour localStorage et pousse sur le Cloud
+                    router('workout');
+                }, 
                 () => {}
             );
         }
